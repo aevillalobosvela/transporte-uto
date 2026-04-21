@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Sistema de Transporte - UTO</title>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css"
+    />
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        padding: 0;
+        font-family: "Segoe UI", sans-serif;
+        background-color: #f9fafb;
+        overflow-x: hidden;
+      }
+
+      #map {
+        width: 100%;
+        height: calc(100vh - 65px);
+        margin-top: 65px;
+      }
+
+      .leaflet-top {
+        top: 40px !important;
+      }
+
+      .top-bar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        padding: 12px 16px;
+        background: white;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        z-index: 1001;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        box-sizing: border-box;
+        will-change: transform;
+      }
+
+      .logo-overlay {
+        position: fixed;
+        top: 75px;
+        right: 16px;
+        z-index: 999;
+        width: 100px;
+        pointer-events: none;
+      }
+
+      .logo-overlay img {
+        width: 100%;
+        height: auto;
+        border-radius: 6px;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+      }
+
+      .menu-toggle {
+        background: #1e3a8a;
+        color: white;
+        border: none;
+        width: 40px;
+        height: 40px;
+        border-radius: 8px;
+        font-size: 20px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+      }
+
+      .search-box {
+        flex: 1;
+        max-width: 500px;
+        display: flex;
+        gap: 8px;
+        min-width: 0;
+      }
+
+      .search-box input {
+        flex: 1;
+        padding: 10px 14px;
+        border: 1px solid #cbd5e1;
+        border-radius: 8px;
+        font-size: 15px;
+        outline: none;
+        min-width: 0;
+      }
+
+      .search-box button {
+        padding: 10px 16px;
+        background: #1e3a8a;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        font-weight: 600;
+        white-space: nowrap;
+      }
+
+      .mobile-menu {
+        position: fixed;
+        top: 75px;
+        left: 16px;
+        background: white;
+        padding: 16px;
+        border-radius: 12px;
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+        z-index: 1000;
+        display: none;
+        flex-direction: column;
+        gap: 16px;
+        width: calc(50% - 32px);
+        max-width: 240px;
+        max-height: calc(100vh - 100px);
+        overflow-y: auto;
+      }
+
+      .mobile-menu.active {
+        display: flex;
+      }
+
+      .menu-section {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .menu-title {
+        font-weight: 700;
+        font-size: 16px;
+        color: #1e293b;
+        padding: 8px 0;
+        border-bottom: 2px solid #e2e8f0;
+        margin-bottom: 4px;
+      }
+
+      .btn {
+        padding: 12px;
+        border: none;
+        border-radius: 8px;
+        color: white;
+        font-weight: 600;
+        cursor: pointer;
+        text-align: center;
+        transition: all 0.2s;
+        font-size: 14px;
+      }
+
+      .btn:hover {
+        opacity: 0.9;
+        transform: translateY(-1px);
+      }
+
+      .btn-route1 {
+        background: linear-gradient(135deg, #1e3a8a 0%, #1e3a8a 100%);
+      }
+
+      .btn-route2 {
+        background: linear-gradient(135deg, #1e3a8a 0%, #1e3a8a 100%);
+      }
+
+      .btn-both {
+        background: linear-gradient(135deg, #1e3a8a 0%, #1e3a8a 100%);
+      }
+
+      .legend-panel {
+        position: fixed;
+        bottom: 16px;
+        right: 16px;
+        background: white;
+        padding: 16px;
+        border-radius: 12px;
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+        z-index: 1000;
+        width: 250px;
+        max-width: 350px;
+        display: none;
+        max-height: 400px;
+        overflow-y: auto;
+      }
+      .legend-panel::-webkit-scrollbar {
+        width: 8px;
+      }
+      .legend-panel::-webkit-scrollbar-track {
+        background: #f1f5f9;
+        border-radius: 4px;
+      }
+      .legend-panel::-webkit-scrollbar-thumb {
+        background: #94a3b8;
+        border-radius: 4px;
+      }
+      .legend-panel::-webkit-scrollbar-thumb:hover {
+        background: #64748b;
+      }
+      .legend-panel h3 {
+        margin: 0 0 12px;
+        color: #1e293b;
+        font-size: 18px;
+        font-weight: 700;
+        border-bottom: 2px solid #e2e8f0;
+        padding-bottom: 8px;
+      }
+      .legend-item {
+        display: flex;
+        flex-direction: column;
+        margin: 12px 0;
+        padding: 12px;
+        background: #f8fafc;
+        border-radius: 8px;
+        border-left: 4px solid #cbd5e1;
+        word-wrap: break-word;
+        overflow-wrap: break-word;
+      }
+      .legend-header {
+        display: flex;
+        align-items: center;
+        margin-bottom: 8px;
+      }
+      .legend-color {
+        width: 50px;
+        height: 6px;
+        border-radius: 3px;
+        margin-right: 10px;
+        flex-shrink: 0;
+      }
+      .legend-name {
+        font-weight: 700;
+        font-size: 15px;
+        color: #1e293b;
+      }
+      .legend-details {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        font-size: 13px;
+        color: #475569;
+        word-wrap: break-word;
+        overflow-wrap: break-word;
+      }
+      .legend-row {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+      .legend-icon {
+        font-size: 14px;
+      }
+      .search-message {
+        position: fixed;
+        top: 70px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: white;
+        padding: 12px 20px;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        z-index: 1002;
+        display: none;
+        font-weight: 500;
+        border-left: 4px solid #1e3a8a;
+        max-width: calc(100% - 32px);
+        width: auto;
+        text-align: center;
+      }
+
+      .facultad-marker {
+        background: #1e3a8a !important;
+        color: white !important;
+        font-size: 14px !important;
+      }
+
+      .arrow-marker {
+        width: 0;
+        height: 0;
+        border-left: 8px solid transparent;
+        border-right: 8px solid transparent;
+        border-bottom: 12px solid currentColor;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="top-bar">
+      <button class="menu-toggle" id="menuToggle">☰</button>
+      <div class="search-box">
+        <input
+          type="text"
+          id="searchStreet"
+          placeholder="Buscar calle en todas las rutas..."
+        />
+        <button onclick="searchStreet()">🔍 Buscar</button>
+      </div>
+    </div>
+
+    <div class="mobile-menu" id="mobileMenu">
+      <div class="menu-section">
+        <div class="menu-title">MAÑANA</div>
+        <button
+          class="btn btn-route1"
+          onclick="showRoutes('morning', 'route1')"
+        >
+          Ruta 1
+        </button>
+        <button
+          class="btn btn-route2"
+          onclick="showRoutes('morning', 'route2')"
+        >
+          Ruta 2
+        </button>
+        <button class="btn btn-both" onclick="showRoutes('morning', 'both')">
+          Ambas Rutas
+        </button>
+      </div>
+
+      <div class="menu-section">
+        <div class="menu-title">MEDIODÍA</div>
+        <button class="btn btn-route1" onclick="showRoutes('midday', 'route1')">
+          Ruta 1
+        </button>
+        <button class="btn btn-route2" onclick="showRoutes('midday', 'route2')">
+          Ruta 2
+        </button>
+        <button class="btn btn-both" onclick="showRoutes('midday', 'both')">
+          Ambas Rutas
+        </button>
+      </div>
+
+      <div class="menu-section">
+        <div class="menu-title">TARDE</div>
+        <button
+          class="btn btn-route1"
+          onclick="showRoutes('evening', 'route1')"
+        >
+          Ruta 1
+        </button>
+        <button
+          class="btn btn-route2"
+          onclick="showRoutes('evening', 'route2')"
+        >
+          Ruta 2
+        </button>
+        <button class="btn btn-both" onclick="showRoutes('evening', 'both')">
+          Ambas Rutas
+        </button>
+      </div>
+    </div>
+
+    <div id="map"></div>
+
+    <div class="search-message" id="searchMessage"></div>
+
+    <div class="legend-panel" id="legendPanel">
+      <h3>📍 Rutas Activas</h3>
+      <div id="legendContent"></div>
+    </div>
+
+    <div class="logo-overlay">
+      <img src="img/Detic_logo.webp" alt="Logo UTO" />
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
+    <script src="js/main.js"></script>
+  </body>
+</html>
