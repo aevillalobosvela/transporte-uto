@@ -372,45 +372,21 @@ function updateLegend(routes) {
     item.style.borderLeftColor = route.color || "#3b82f6";
 
     item.innerHTML = `
-            <div class="legend-header">
-                <div class="legend-color" style="background-color: ${
-                  route.color || "#3b82f6"
-                };"></div>
-                <div class="legend-name">${route.name || "Ruta"}</div>
-            </div>
-            <div class="legend-details">
-                <div class="legend-row">
-                    <span class="legend-icon">🚏</span>
-                    <strong>Salida:</strong> ${route.start || "No especificado"}
-                </div>
-                <div class="legend-row">
-                    <span class="legend-icon">🏁</span>
-                    <strong>Llegada:</strong> ${route.end || "No especificado"}
-                </div>
-                <div class="legend-row">
-                    <span class="legend-icon">${
-                      route.direction === "Ida"
-                        ? "➡️"
-                        : route.direction === "Vuelta"
-                        ? "⬅️"
-                        : "🔄"
-                    }</span>
-                    <strong>Dirección:</strong> ${
-                      route.direction || "No especificado"
-                    }
-                </div>
-                <div class="legend-row">
-                    <span class="legend-icon">⏰</span>
-                    <strong>Horario:</strong> ${
-                      route.schedule || "No especificado"
-                    }
-                </div>
-            </div>
-        `;
+      <div class="legend-item-header">
+        <div class="legend-color" style="background-color:${route.color || "#3b82f6"};"></div>
+        <div class="legend-name">${route.name || "Ruta"}</div>
+      </div>
+      <div class="legend-details">
+        <div class="legend-row">🚏 <strong>Salida:</strong> ${route.start || "N/A"}</div>
+        <div class="legend-row">🏁 <strong>Llegada:</strong> ${route.end || "N/A"}</div>
+        <div class="legend-row">${route.direction === "Ida" ? "➡️" : route.direction === "Vuelta" ? "⬅️" : "🔄"} <strong>Dirección:</strong> ${route.direction || "N/A"}</div>
+        <div class="legend-row">⏰ <strong>Horario:</strong> ${route.schedule || "N/A"}</div>
+      </div>
+    `;
     legendContent.appendChild(item);
   });
 
-  document.getElementById("legendPanel").style.display = "block";
+  document.getElementById("legendPanel").classList.add("visible");
 }
 
 function searchStreet() {
@@ -476,15 +452,21 @@ function clearMap() {
   markers.forEach((m) => map.removeLayer(m));
   polylines = [];
   markers = [];
-  document.getElementById("legendPanel").style.display = "none";
+  document.getElementById("legendPanel").classList.remove("visible");
 }
 faculties.forEach((fac) => {
   const marker = L.marker([fac.lat, fac.lng], {
     icon: L.divIcon({
       className: "custom-marker facultad-marker",
-      html: `<div style="background-color: ${fac.color}; color: white; width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; border: 2px solid white; box-shadow: 0 2px 8px rgba(0,0,0,0.4); font-size: 14px;">🎓</div>`,
+      html: `<div style="background:#033f86;width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;border:2px solid white;box-shadow:0 2px 8px rgba(3,63,134,0.45);">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
+          <path d="M12 3L2 9l10 6 10-6-10-6z" fill="white"/>
+          <path d="M2 9v6M22 9v6M6 11v5c0 1.1 2.7 3 6 3s6-1.9 6-3v-5" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
+        </svg>
+      </div>`,
       iconSize: [30, 30],
+      iconAnchor: [15, 15],
     }),
   }).addTo(map);
-  marker.bindPopup(`<b>🎓 ${fac.name}</b>`);
+  marker.bindPopup(`<b style="color:#033f86">🎓 ${fac.name}</b>`);
 });
