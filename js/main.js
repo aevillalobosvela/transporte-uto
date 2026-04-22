@@ -89,8 +89,73 @@ document.addEventListener("click", (e) => {
 });
 
 document.getElementById("searchStreet").addEventListener("keypress", (e) => {
-  if (e.key === "Enter") searchStreet();
+  if (e.key === "Enter") {
+    closeAutocomplete();
+    searchStreet();
+  }
 });
+
+// Autocompletado
+const searchInput = document.getElementById("searchStreet");
+const autocompleteList = document.getElementById("autocompleteList");
+let highlightedIndex = -1;
+
+searchInput.addEventListener("input", () => {
+  const val = searchInput.value.trim().toLowerCase();
+  highlightedIndex = -1;
+  if (!val || allLoadedRoutes.length === 0) { closeAutocomplete(); return; }
+
+  const allStreets = [...new Set(
+    allLoadedRoutes.flatMap((r) => r.streets || [])
+  )];
+  const matches = allStreets.filter((s) => s.toLowerCase().includes(val)).slice(0, 8);
+
+  if (matches.length === 0) { closeAutocomplete(); return; }
+
+  autocompleteList.innerHTML = "";
+  matches.forEach((street) => {
+    const div = document.createElement("div");
+    div.textContent = street;
+    div.addEventListener("mousedown", () => {
+      searchInput.value = street;
+      closeAutocomplete();
+      searchStreet();
+    });
+    autocompleteList.appendChild(div);
+  });
+  autocompleteList.style.display = "block";
+});
+
+searchInput.addEventListener("keydown", (e) => {
+  const items = autocompleteList.querySelectorAll("div");
+  if (e.key === "ArrowDown") {
+    highlightedIndex = Math.min(highlightedIndex + 1, items.length - 1);
+    items.forEach((el, i) => el.classList.toggle("highlighted", i === highlightedIndex));
+    e.preventDefault();
+  } else if (e.key === "ArrowUp") {
+    highlightedIndex = Math.max(highlightedIndex - 1, 0);
+    items.forEach((el, i) => el.classList.toggle("highlighted", i === highlightedIndex));
+    e.preventDefault();
+  } else if (e.key === "Escape") {
+    closeAutocomplete();
+  }
+});
+
+searchInput.addEventListener("blur", () => setTimeout(closeAutocomplete, 150));
+
+function closeAutocomplete() {
+  autocompleteList.style.display = "none";
+  autocompleteList.innerHTML = "";
+  highlightedIndex = -1;
+}
+
+function resetMap() {
+  const hour = new Date().getHours();
+  const defaultPeriod = hour < 11 ? "morning" : hour < 15 ? "midday" : "evening";
+  showRoutes(defaultPeriod, "both");
+  searchInput.value = "";
+  closeAutocomplete();
+}
 
 async function loadAllRoutes() {
   const periods = ["morning", "midday", "evening"];
@@ -214,6 +279,15 @@ async function showRoutes(period, routeType) {
   showMessage(`✅ Mostrando ${routeNames} - ${periodNames[period]}`);
 }
 
+function makeEndpointIcon(emoji, color) {
+  return L.divIcon({
+    className: "",
+    html: `<div style="background:${color};width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;border:2px solid white;box-shadow:0 2px 6px rgba(0,0,0,0.35);">${emoji}</div>`,
+    iconSize: [28, 28],
+    iconAnchor: [14, 14],
+  });
+}
+
 function drawRoute(route) {
   const points = route.points || [];
   if (points.length === 0) return;
@@ -238,6 +312,20 @@ function drawRoute(route) {
     `);
 
   polylines.push(polyline);
+
+  // Marcador de inicio (🚏) y fin (🏁)
+  const color = route.color || "#3b82f6";
+  const firstPoint = points[0];
+  const lastPoint = points[points.length - 1];
+
+  const startMarker = L.marker(firstPoint, { icon: makeEndpointIcon("🚏", color) })
+    .addTo(map)
+    .bindPopup(`<b>${route.name}</b><br>🚏 Salida: ${route.start || "N/A"}`);
+  const endMarker = L.marker(lastPoint, { icon: makeEndpointIcon("🏁", color) })
+    .addTo(map)
+    .bindPopup(`<b>${route.name}</b><br>🏁 Llegada: ${route.end || "N/A"}`);
+
+  markers.push(startMarker, endMarker);
 
   const arrowInterval = Math.max(1, Math.floor(points.length / 8)); // Aproximadamente 8 flechas por ruta
 
