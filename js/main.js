@@ -175,6 +175,10 @@ async function loadAllRoutes() {
           routesData.route2.forEach((r) => (r.period = period));
           allLoadedRoutes.push(...routesData.route2);
         }
+        if (routesData.route3) {
+          routesData.route3.forEach((r) => (r.period = period));
+          allLoadedRoutes.push(...routesData.route3);
+        }
       }
     } catch (err) {
       console.error(`Error al cargar rutas de ${period}:`, err);
@@ -210,41 +214,14 @@ async function showRoutes(period, routeType) {
     routesToShow = routesData.route1 || [];
   } else if (routeType === "route2") {
     routesToShow = routesData.route2 || [];
+  } else if (routeType === "route3") {
+    routesToShow = routesData.route3 || [];
   } else if (routeType === "both") {
-    if (period === "morning") {
-      routesToShow = [
-        ...(routesData.route1?.filter(
-          (r) => r.name?.includes("1A") || r.name?.includes("1B")
-        ) || []),
-        ...(routesData.route2?.filter(
-          (r) => r.name?.includes("2A") || r.name?.includes("2B")
-        ) || []),
-      ];
-    } else if (period === "midday") {
-      routesToShow = [
-        ...(routesData.route1?.filter(
-          (r) => r.name?.includes("1C") || r.name?.includes("1D")
-        ) || []),
-        ...(routesData.route2?.filter(
-          (r) => r.name?.includes("2C") || r.name?.includes("2D")
-        ) || []),
-      ];
-    } else if (period === "evening") {
-      routesToShow = [
-        ...(routesData.route1?.filter(
-          (r) => r.name?.includes("1E") || r.name?.includes("1F")
-        ) || []),
-        ...(routesData.route2?.filter(
-          (r) => r.name?.includes("2E") || r.name?.includes("2F")
-        ) || []),
-      ];
-    }
-    if (routesToShow.length === 0) {
-      routesToShow = [
-        ...(routesData.route1 || []),
-        ...(routesData.route2 || []),
-      ];
-    }
+    routesToShow = [
+      ...(routesData.route1 || []),
+      ...(routesData.route2 || []),
+      ...(routesData.route3 || []),
+    ];
   }
 
   if (routesToShow.length === 0) {
@@ -430,13 +407,13 @@ function searchStreet() {
 
 function setActiveButton(period, routeType) {
   document.querySelectorAll(".btn").forEach((b) => b.classList.remove("active-btn"));
-  const map = { route1: 0, route2: 1, both: 2 };
+  const typeIndex = { route1: 0, route2: 1, route3: 2, both: 3 };
   const sections = document.querySelectorAll(".menu-section");
   const periodIndex = { morning: 0, midday: 1, evening: 2 };
   const section = sections[periodIndex[period]];
   if (section) {
     const btns = section.querySelectorAll(".btn");
-    if (btns[map[routeType]]) btns[map[routeType]].classList.add("active-btn");
+    if (btns[typeIndex[routeType]]) btns[typeIndex[routeType]].classList.add("active-btn");
   }
 }
 
