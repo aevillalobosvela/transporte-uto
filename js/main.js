@@ -211,7 +211,9 @@ async function triggerShowRoutes() {
     if (allRoutes.length === 0) { showMessage("⚠️ No hay rutas para esta selección."); return; }
     currentRoutes = allRoutes;
     allRoutes.forEach(r => drawRoute(r));
-    const pts = allRoutes.flatMap(r => r.points || []);
+    const pts = allRoutes
+      .flatMap(r => (r.points || []).flat(2))
+      .filter(p => Array.isArray(p) && p.length >= 2 && p[0] != null && !isNaN(p[0]));
     if (pts.length) map.fitBounds(L.latLngBounds(pts), { padding: [50, 50] });
     updateLegend(allRoutes);
   } else {
@@ -393,10 +395,14 @@ async function showRoutes(period, routeType) {
   currentRoutes = routesToShow;
   routesToShow.forEach((route) => drawRoute(route));
 
-  if (routesToShow.length > 0 && routesToShow[0]?.points) {
-    const allPoints = routesToShow.flatMap((r) => r.points || []);
-    const bounds = L.latLngBounds(allPoints);
-    map.fitBounds(bounds, { padding: [50, 50] });
+  if (routesToShow.length > 0) {
+    const allPoints = routesToShow
+      .flatMap(r => (r.points || []).flat(2))
+      .filter(p => Array.isArray(p) && p.length >= 2 && p[0] != null && !isNaN(p[0]));
+    if (allPoints.length > 0) {
+      const bounds = L.latLngBounds(allPoints);
+      map.fitBounds(bounds, { padding: [50, 50] });
+    }
   }
 
   updateLegend(routesToShow);
@@ -416,8 +422,11 @@ function makeEndpointIcon(emoji, color) {
 }
 
 function drawRoute(route) {
-  const points = route.points || [];
-  if (points.length === 0) return;
+  // Aplanar puntos anidados y filtrar nulos
+  let points = (route.points || []).flat(2);
+  // Verificar que cada punto sea un par numérico válido
+  points = points.filter(p => Array.isArray(p) && p.length >= 2 && p[0] != null && p[1] != null && !isNaN(p[0]) && !isNaN(p[1]));
+  if (points.length < 2) return;
   const polyline = L.polyline(points, {
     color: route.color || "#3b82f6",
     weight: 6,
@@ -541,7 +550,9 @@ function searchStreet() {
   clearMap();
   currentRoutes = foundRoutes;
   foundRoutes.forEach((route) => drawRoute(route));
-  const allPoints = foundRoutes.flatMap((r) => r.points || []);
+  const allPoints = foundRoutes
+    .flatMap(r => (r.points || []).flat(2))
+    .filter(p => Array.isArray(p) && p.length >= 2 && p[0] != null && !isNaN(p[0]));
   if (allPoints.length > 0) {
     const bounds = L.latLngBounds(allPoints);
     map.fitBounds(bounds, { padding: [50, 50] });
