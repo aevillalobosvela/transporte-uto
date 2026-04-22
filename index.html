@@ -31,11 +31,15 @@
         overflow-x: hidden;
       }
 
-      /* ── MAP ── */
+      /* ── LAYOUT ── */
+      body { display: flex; flex-direction: column; height: 100vh; }
+
       #map {
-        width: 100%;
-        height: calc(100vh - 60px);
-        margin-top: 60px;
+        position: fixed;
+        top: 60px;
+        left: 280px;
+        right: 0;
+        bottom: 0;
         filter: saturate(0.85) brightness(0.97);
       }
 
@@ -65,6 +69,7 @@
         opacity: 0.95;
       }
 
+      /* botón solo visible en móvil */
       .menu-toggle {
         background: rgba(255,255,255,0.15);
         color: white;
@@ -72,9 +77,8 @@
         width: 38px;
         height: 38px;
         border-radius: 8px;
-        font-size: 18px;
         cursor: pointer;
-        display: flex;
+        display: none;
         align-items: center;
         justify-content: center;
         flex-shrink: 0;
@@ -152,70 +156,240 @@
       #autocompleteList div:hover,
       #autocompleteList div.highlighted { background: var(--surface); color: var(--brand); }
 
-      /* ── SIDE MENU ── */
-      .mobile-menu {
+      /* ── SIDE PANEL ── */
+      .side-panel {
         position: fixed;
-        top: 68px;
-        left: 12px;
+        top: 60px;
+        left: 0;
+        width: 280px;
+        height: calc(100vh - 60px);
         background: white;
-        padding: 14px;
-        border-radius: 14px;
-        box-shadow: 0 6px 24px rgba(3,63,134,0.18);
+        border-right: 1px solid #e2e8f0;
+        box-shadow: 2px 0 16px rgba(3,63,134,0.08);
         z-index: 1000;
-        display: none;
+        display: flex;
         flex-direction: column;
-        gap: 14px;
-        width: calc(50% - 24px);
-        max-width: 230px;
-        max-height: calc(100vh - 90px);
-        overflow-y: auto;
-        border-top: 3px solid var(--brand);
+        overflow: hidden;
+        transition: transform 0.3s ease;
       }
-      .mobile-menu.active { display: flex; }
 
-      .menu-section { display: flex; flex-direction: column; gap: 7px; }
+      .side-panel.collapsed { transform: translateX(-280px); }
 
-      .menu-title {
-        font-weight: 700;
-        font-size: 11px;
-        letter-spacing: 0.08em;
-        text-transform: uppercase;
-        padding: 6px 8px;
-        border-radius: 6px;
-        margin-bottom: 2px;
-        display: flex;
-        align-items: center;
-        gap: 6px;
-      }
-      .menu-title.morning { background: #fef3c7; color: #92400e; }
-      .menu-title.midday  { background: #e0f2fe; color: #075985; }
-      .menu-title.evening { background: #ede9fe; color: #4c1d95; }
-
-      .btn {
-        padding: 10px 12px;
-        border: 1.5px solid transparent;
-        border-radius: 8px;
-        color: white;
-        font-weight: 600;
-        cursor: pointer;
-        text-align: left;
-        transition: all 0.18s;
-        font-size: 13px;
+      .panel-header {
         background: var(--brand);
+        padding: 14px 16px 12px;
+        flex-shrink: 0;
+      }
+
+      .panel-header h2 {
+        margin: 0 0 2px;
+        color: white;
+        font-size: 13px;
+        font-weight: 700;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+        opacity: 0.8;
+      }
+
+      .panel-selection-summary {
+        font-size: 12px;
+        color: rgba(255,255,255,0.7);
+        min-height: 16px;
+        transition: color 0.2s;
+      }
+
+      .panel-selection-summary.has-selection {
+        color: #93c5fd;
+        font-weight: 600;
+      }
+
+      .panel-body {
+        flex: 1;
+        overflow-y: auto;
+        padding: 16px 14px;
         display: flex;
-        align-items: center;
+        flex-direction: column;
+        gap: 20px;
+      }
+
+      .panel-body::-webkit-scrollbar { width: 5px; }
+      .panel-body::-webkit-scrollbar-track { background: transparent; }
+      .panel-body::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+
+      /* ── SELECTOR SECTION ── */
+      .selector-section { display: flex; flex-direction: column; gap: 8px; }
+
+      .selector-label {
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--muted);
+        padding: 0 2px;
+      }
+
+      /* Route pills */
+      .route-pills {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
         gap: 7px;
       }
-      .btn:hover { background: var(--brand-light); transform: translateX(2px); }
-      .btn.active-btn {
-        background: var(--brand-dark);
-        border-color: var(--brand-light);
-        box-shadow: 0 0 0 3px rgba(3,63,134,0.25);
-        transform: translateX(2px);
+
+      .route-pill {
+        padding: 10px 8px;
+        border-radius: 10px;
+        border: 2px solid transparent;
+        cursor: pointer;
+        font-size: 13px;
+        font-weight: 700;
+        text-align: center;
+        transition: all 0.18s;
+        color: white;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 4px;
+        line-height: 1.2;
       }
 
-      .btn-route3 { background: #16a34a; }
-      .btn-route3:hover { background: #15803d; }
+      .route-pill .pill-icon { font-size: 18px; }
+      .route-pill .pill-label { font-size: 11px; font-weight: 600; opacity: 0.9; }
+
+      .route-pill.r1  { background: #d97706; }
+      .route-pill.r2  { background: #7c3aed; }
+      .route-pill.r3  { background: #16a34a; }
+      .route-pill.all { background: var(--brand); grid-column: span 2; flex-direction: row; justify-content: center; gap: 8px; padding: 9px; }
+
+      .route-pill:hover { opacity: 0.85; transform: translateY(-1px); }
+      .route-pill.selected {
+        border-color: white;
+        box-shadow: 0 0 0 3px rgba(0,0,0,0.15);
+        transform: translateY(-1px);
+      }
+
+      /* Period pills */
+      .period-pills {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+
+      .period-pill {
+        padding: 10px 14px;
+        border-radius: 9px;
+        border: 1.5px solid #e2e8f0;
+        cursor: pointer;
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--text);
+        background: var(--surface);
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        transition: all 0.18s;
+      }
+
+      .period-pill:hover { border-color: var(--brand); background: #eef3fb; }
+
+      .period-pill.selected {
+        background: var(--brand);
+        color: white;
+        border-color: var(--brand);
+      }
+
+      .period-pill .period-time {
+        margin-left: auto;
+        font-size: 11px;
+        opacity: 0.65;
+        font-weight: 500;
+      }
+
+      .period-pill.selected .period-time { opacity: 0.8; }
+
+      /* Period section animada */
+      .period-section {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        overflow: hidden;
+        max-height: 0;
+        opacity: 0;
+        transition: max-height 0.3s ease, opacity 0.25s ease;
+      }
+
+      .period-section.visible {
+        max-height: 300px;
+        opacity: 1;
+      }
+
+      /* ── DIVIDER ── */
+      .panel-divider {
+        height: 1px;
+        background: #e2e8f0;
+        margin: 0 -14px;
+      }
+
+      /* ── ACTIVE ROUTE CHIP ── */
+      .active-chip {
+        display: none;
+        align-items: center;
+        gap: 8px;
+        background: var(--surface);
+        border-radius: 8px;
+        padding: 10px 12px;
+        font-size: 12px;
+        color: var(--text);
+        border: 1px solid #e2e8f0;
+      }
+
+      .active-chip.visible { display: flex; }
+
+      .active-chip-dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        flex-shrink: 0;
+      }
+
+      .active-chip-text { flex: 1; font-weight: 600; }
+
+      .active-chip-clear {
+        background: none;
+        border: none;
+        cursor: pointer;
+        color: var(--muted);
+        font-size: 16px;
+        line-height: 1;
+        padding: 0;
+        transition: color 0.15s;
+      }
+      .active-chip-clear:hover { color: #ef4444; }
+
+      /* ── COLLAPSE TOGGLE ── */
+      .panel-collapse-btn {
+        position: fixed;
+        top: 50%;
+        left: 280px;
+        transform: translateY(-50%);
+        width: 20px;
+        height: 48px;
+        background: white;
+        border: 1px solid #e2e8f0;
+        border-left: none;
+        border-radius: 0 8px 8px 0;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 1001;
+        box-shadow: 2px 0 8px rgba(3,63,134,0.1);
+        transition: left 0.3s ease, background 0.2s;
+        color: var(--muted);
+      }
+      .panel-collapse-btn:hover { background: var(--surface); color: var(--brand); }
+      .panel-collapse-btn.collapsed { left: 0; }
+      .panel-collapse-btn svg { transition: transform 0.3s; }
+      .panel-collapse-btn.collapsed svg { transform: rotate(180deg); }
 
       /* ── LEGEND ── */
       .legend-panel {
@@ -233,7 +407,6 @@
         flex-direction: column;
         border-top: 3px solid var(--brand);
       }
-      .legend-panel { display: none; }
       .legend-panel.visible { display: flex; }
 
       .legend-header-bar {
@@ -284,23 +457,9 @@
         border-radius: 3px;
         flex-shrink: 0;
       }
-      .legend-name {
-        font-weight: 700;
-        font-size: 13px;
-        color: var(--text);
-      }
-      .legend-details {
-        display: flex;
-        flex-direction: column;
-        gap: 3px;
-        font-size: 12px;
-        color: var(--muted);
-      }
-      .legend-row {
-        display: flex;
-        align-items: center;
-        gap: 5px;
-      }
+      .legend-name { font-weight: 700; font-size: 13px; color: var(--text); }
+      .legend-details { display: flex; flex-direction: column; gap: 3px; font-size: 12px; color: var(--muted); }
+      .legend-row { display: flex; align-items: center; gap: 5px; }
 
       /* ── SEARCH MESSAGE ── */
       .search-message {
@@ -326,7 +485,7 @@
       #resetBtn {
         position: fixed;
         bottom: 14px;
-        left: 14px;
+        left: 294px;
         z-index: 1000;
         width: 40px;
         height: 40px;
@@ -338,17 +497,30 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        transition: background 0.2s, transform 0.15s;
+        transition: background 0.2s, transform 0.15s, left 0.3s;
         padding: 0;
       }
       #resetBtn:hover { background: var(--brand-light); transform: scale(1.07); }
       #resetBtn svg { display: block; }
+      #resetBtn.panel-collapsed { left: 14px; }
 
       /* ── FACULTY MARKER ── */
       .facultad-marker { background: transparent !important; }
-
-      /* ── LOGO OVERLAY (hidden, now in top bar) ── */
       .logo-overlay { display: none; }
+
+      /* ── MOBILE ── */
+      @media (max-width: 640px) {
+        #map { left: 0; }
+        .menu-toggle { display: flex; }
+        .side-panel {
+          transform: translateX(-280px);
+          box-shadow: 4px 0 24px rgba(3,63,134,0.2);
+        }
+        .side-panel.mobile-open { transform: translateX(0); }
+        .panel-collapse-btn { display: none; }
+        #resetBtn { left: 14px !important; }
+        .legend-panel { width: calc(100vw - 28px); right: 14px; }
+      }
     </style>
   </head>
   <body>
@@ -363,12 +535,7 @@
       <img src="img/Detic_logo.webp" alt="Logo UTO" class="top-bar-logo" />
       <div class="search-box">
         <div class="search-wrapper">
-          <input
-            type="text"
-            id="searchStreet"
-            placeholder="Buscar calle en todas las rutas..."
-            autocomplete="off"
-          />
+          <input type="text" id="searchStreet" placeholder="Buscar calle en todas las rutas..." autocomplete="off" />
           <div id="autocompleteList"></div>
         </div>
         <button onclick="searchStreet()">
@@ -380,29 +547,86 @@
       </div>
     </div>
 
-    <div class="mobile-menu" id="mobileMenu">
-      <div class="menu-section">
-        <div class="menu-title morning">☀️ Mañana</div>
-        <button class="btn btn-route1" onclick="showRoutes('morning', 'route1')">🚌 Ruta 1</button>
-        <button class="btn btn-route2" onclick="showRoutes('morning', 'route2')">🚌 Ruta 2</button>
-        <button class="btn btn-route3" onclick="showRoutes('morning', 'route3')">🚌 Ruta 3</button>
-        <button class="btn btn-both"   onclick="showRoutes('morning', 'both')">🚌 Todas</button>
+    <!-- Panel lateral -->
+    <aside class="side-panel" id="sidePanel">
+      <div class="panel-header">
+        <h2>Rutas de Transporte</h2>
+        <div class="panel-selection-summary" id="selectionSummary">Selecciona una ruta para comenzar</div>
       </div>
-      <div class="menu-section">
-        <div class="menu-title midday">🌤️ Mediodía</div>
-        <button class="btn btn-route1" onclick="showRoutes('midday', 'route1')">🚌 Ruta 1</button>
-        <button class="btn btn-route2" onclick="showRoutes('midday', 'route2')">🚌 Ruta 2</button>
-        <button class="btn btn-route3" onclick="showRoutes('midday', 'route3')">🚌 Ruta 3</button>
-        <button class="btn btn-both"   onclick="showRoutes('midday', 'both')">🚌 Todas</button>
+
+      <div class="panel-body">
+
+        <!-- Chip de selección activa -->
+        <div class="active-chip" id="activeChip">
+          <div class="active-chip-dot" id="activeChipDot"></div>
+          <span class="active-chip-text" id="activeChipText"></span>
+          <button class="active-chip-clear" onclick="resetMap()" title="Limpiar">×</button>
+        </div>
+
+        <!-- Nivel 1: Ruta -->
+        <div class="selector-section">
+          <div class="selector-label">1 — Selecciona la ruta</div>
+          <div class="route-pills">
+            <button class="route-pill r1" data-route="route1" onclick="selectRoute('route1')">
+              <span class="pill-icon">🚌</span>
+              <span>Ruta 1</span>
+              <span class="pill-label">Amarillo</span>
+            </button>
+            <button class="route-pill r2" data-route="route2" onclick="selectRoute('route2')">
+              <span class="pill-icon">🚌</span>
+              <span>Ruta 2</span>
+              <span class="pill-label">Violeta</span>
+            </button>
+            <button class="route-pill r3" data-route="route3" onclick="selectRoute('route3')">
+              <span class="pill-icon">🚌</span>
+              <span>Ruta 3</span>
+              <span class="pill-label">Verde</span>
+            </button>
+            <button class="route-pill all" data-route="both" onclick="selectRoute('both')">
+              <span class="pill-icon">🗺️</span>
+              <span>Todas las rutas</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="panel-divider"></div>
+
+        <!-- Nivel 2: Turno -->
+        <div class="selector-section period-section" id="periodSection">
+          <div class="selector-label">2 — Selecciona el turno</div>
+          <div class="period-pills">
+            <button class="period-pill" data-period="morning" onclick="selectPeriod('morning')">
+              <span>☀️</span>
+              <span>Mañana</span>
+              <span class="period-time">7:00 – 9:00</span>
+            </button>
+            <button class="period-pill" data-period="midday" onclick="selectPeriod('midday')">
+              <span>🌤️</span>
+              <span>Mediodía</span>
+              <span class="period-time">12:00 – 14:30</span>
+            </button>
+            <button class="period-pill" data-period="evening" onclick="selectPeriod('evening')">
+              <span>🌙</span>
+              <span>Tarde</span>
+              <span class="period-time">18:00 – 19:15</span>
+            </button>
+            <button class="period-pill" data-period="all" onclick="selectPeriod('all')">
+              <span>📅</span>
+              <span>Todo el día</span>
+              <span class="period-time">Todos los turnos</span>
+            </button>
+          </div>
+        </div>
+
       </div>
-      <div class="menu-section">
-        <div class="menu-title evening">🌙 Tarde</div>
-        <button class="btn btn-route1" onclick="showRoutes('evening', 'route1')">🚌 Ruta 1</button>
-        <button class="btn btn-route2" onclick="showRoutes('evening', 'route2')">🚌 Ruta 2</button>
-        <button class="btn btn-route3" onclick="showRoutes('evening', 'route3')">🚌 Ruta 3</button>
-        <button class="btn btn-both"   onclick="showRoutes('evening', 'both')">🚌 Todas</button>
-      </div>
-    </div>
+    </aside>
+
+    <!-- Botón colapsar panel -->
+    <button class="panel-collapse-btn" id="collapseBtn" onclick="togglePanel()" title="Colapsar panel">
+      <svg width="10" height="16" viewBox="0 0 10 16" fill="none">
+        <path d="M7 2L2 8l5 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </button>
 
     <div id="map"></div>
 

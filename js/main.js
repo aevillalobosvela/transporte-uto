@@ -75,27 +75,134 @@ const faculties = [
   },
 ];
 
+// ── Estado del panel ──
+let selectedRoute = null;
+let selectedPeriod = null;
+
+const routeColors = { route1: "#d97706", route2: "#7c3aed", route3: "#16a34a", both: "#033f86" };
+const routeNames  = { route1: "Ruta 1", route2: "Ruta 2", route3: "Ruta 3", both: "Todas las rutas" };
+const periodNames = { morning: "Mañana", midday: "Mediodía", evening: "Tarde", all: "Todo el día" };
+
+// ── Panel colapsar ──
+let panelCollapsed = false;
+function togglePanel() {
+  panelCollapsed = !panelCollapsed;
+  document.getElementById("sidePanel").classList.toggle("collapsed", panelCollapsed);
+  document.getElementById("collapseBtn").classList.toggle("collapsed", panelCollapsed);
+  document.getElementById("resetBtn").classList.toggle("panel-collapsed", panelCollapsed);
+  setTimeout(() => map.invalidateSize(), 310);
+}
+
+// ── Móvil: toggle panel ──
 document.getElementById("menuToggle").addEventListener("click", () => {
-  document.getElementById("mobileMenu").classList.toggle("active");
+  document.getElementById("sidePanel").classList.toggle("mobile-open");
 });
 
-// Cerrar menú al hacer clic fuera
 document.addEventListener("click", (e) => {
-  const menu = document.getElementById("mobileMenu");
+  const panel = document.getElementById("sidePanel");
   const toggle = document.getElementById("menuToggle");
-  if (menu.classList.contains("active") && !menu.contains(e.target) && e.target !== toggle) {
-    menu.classList.remove("active");
+  if (panel.classList.contains("mobile-open") &&
+      !panel.contains(e.target) && e.target !== toggle && !toggle.contains(e.target)) {
+    panel.classList.remove("mobile-open");
   }
 });
+
+// ── Selección de ruta (nivel 1) ──
+function selectRoute(routeType) {
+  selectedRoute = routeType;
+
+  document.querySelectorAll(".route-pill").forEach(b =>
+    b.classList.toggle("selected", b.dataset.route === routeType)
+  );
+
+  // Mostrar sección de turno
+  document.getElementById("periodSection").classList.add("visible");
+
+  // Si ya había turno seleccionado, disparar directamente
+  if (selectedPeriod) {
+    triggerShowRoutes();
+  } else {
+    updateSummary();
+  }
+}
+
+// ── Selección de turno (nivel 2) ──
+function selectPeriod(period) {
+  selectedPeriod = period;
+
+  document.querySelectorAll(".period-pill").forEach(b =>
+    b.classList.toggle("selected", b.dataset.period === period)
+  );
+
+  if (selectedRoute) triggerShowRoutes();
+}
+
+// ── Disparar showRoutes con la selección actual ──
+async function triggerShowRoutes() {
+  if (!selectedRoute || !selectedPeriod) return;
+
+  if (selectedPeriod === "all") {
+    // Cargar los 3 turnos
+    clearMap();
+    const periods = ["morning", "midday", "evening"];
+    let allRoutes = [];
+    for (const p of periods) {
+      try {
+        const res = await fetch(`data/routes/${p}.json`);
+        if (!res.ok) continue;
+        const data = await res.json();
+        const sources = selectedRoute === "both"
+          ? [...(data.route1||[]), ...(data.route2||[]), ...(data.route3||[])]
+          : (data[selectedRoute] || []);
+        allRoutes.push(...sources);
+      } catch(e) { console.error(e); }
+    }
+    if (allRoutes.length === 0) { showMessage("⚠️ No hay rutas para esta selección."); return; }
+    currentRoutes = allRoutes;
+    allRoutes.forEach(r => drawRoute(r));
+    const pts = allRoutes.flatMap(r => r.points || []);
+    if (pts.length) map.fitBounds(L.latLngBounds(pts), { padding: [50, 50] });
+    updateLegend(allRoutes);
+  } else {
+    await showRoutes(selectedPeriod, selectedRoute);
+  }
+
+  updateActiveChip();
+  updateSummary();
+}
+
+function updateSummary() {
+  const el = document.getElementById("selectionSummary");
+  if (selectedRoute && selectedPeriod) {
+    el.textContent = `${routeNames[selectedRoute]} — ${periodNames[selectedPeriod]}`;
+    el.classList.add("has-selection");
+  } else if (selectedRoute) {
+    el.textContent = `${routeNames[selectedRoute]} — elige el turno`;
+    el.classList.remove("has-selection");
+  } else {
+    el.textContent = "Selecciona una ruta para comenzar";
+    el.classList.remove("has-selection");
+  }
+}
+
+function updateActiveChip() {
+  const chip = document.getElementById("activeChip");
+  const dot  = document.getElementById("activeChipDot");
+  const text = document.getElementById("activeChipText");
+  if (selectedRoute && selectedPeriod) {
+    dot.style.background = routeColors[selectedRoute];
+    text.textContent = `${routeNames[selectedRoute]} · ${periodNames[selectedPeriod]}`;
+    chip.classList.add("visible");
+  } else {
+    chip.classList.remove("visible");
+  }
+}
 
 document.getElementById("searchStreet").addEventListener("keypress", (e) => {
-  if (e.key === "Enter") {
-    closeAutocomplete();
-    searchStreet();
-  }
+  if (e.key === "Enter") { closeAutocomplete(); searchStreet(); }
 });
 
-// Autocompletado
+// ── Autocompletado ──
 const searchInput = document.getElementById("searchStreet");
 const autocompleteList = document.getElementById("autocompleteList");
 let highlightedIndex = -1;
@@ -104,16 +211,11 @@ searchInput.addEventListener("input", () => {
   const val = searchInput.value.trim().toLowerCase();
   highlightedIndex = -1;
   if (!val || allLoadedRoutes.length === 0) { closeAutocomplete(); return; }
-
-  const allStreets = [...new Set(
-    allLoadedRoutes.flatMap((r) => r.streets || [])
-  )];
-  const matches = allStreets.filter((s) => s.toLowerCase().includes(val)).slice(0, 8);
-
+  const allStreets = [...new Set(allLoadedRoutes.flatMap(r => r.streets || []))];
+  const matches = allStreets.filter(s => s.toLowerCase().includes(val)).slice(0, 8);
   if (matches.length === 0) { closeAutocomplete(); return; }
-
   autocompleteList.innerHTML = "";
-  matches.forEach((street) => {
+  matches.forEach(street => {
     const div = document.createElement("div");
     div.textContent = street;
     div.addEventListener("mousedown", () => {
@@ -136,9 +238,7 @@ searchInput.addEventListener("keydown", (e) => {
     highlightedIndex = Math.max(highlightedIndex - 1, 0);
     items.forEach((el, i) => el.classList.toggle("highlighted", i === highlightedIndex));
     e.preventDefault();
-  } else if (e.key === "Escape") {
-    closeAutocomplete();
-  }
+  } else if (e.key === "Escape") { closeAutocomplete(); }
 });
 
 searchInput.addEventListener("blur", () => setTimeout(closeAutocomplete, 150));
@@ -150,11 +250,19 @@ function closeAutocomplete() {
 }
 
 function resetMap() {
-  const hour = new Date().getHours();
-  const defaultPeriod = hour < 11 ? "morning" : hour < 15 ? "midday" : "evening";
-  showRoutes(defaultPeriod, "both");
+  selectedRoute = null;
+  selectedPeriod = null;
+  document.querySelectorAll(".route-pill, .period-pill").forEach(b => b.classList.remove("selected"));
+  document.getElementById("periodSection").classList.remove("visible");
+  document.getElementById("activeChip").classList.remove("visible");
+  updateSummary();
+  clearMap();
   searchInput.value = "";
   closeAutocomplete();
+  const hour = new Date().getHours();
+  const defaultPeriod = hour < 11 ? "morning" : hour < 15 ? "midday" : "evening";
+  selectRoute("both");
+  selectPeriod(defaultPeriod);
 }
 
 async function loadAllRoutes() {
@@ -187,11 +295,10 @@ async function loadAllRoutes() {
 }
 
 loadAllRoutes().then(() => {
-  // Mostrar ambas rutas del turno actual por defecto
   const hour = new Date().getHours();
   const defaultPeriod = hour < 11 ? "morning" : hour < 15 ? "midday" : "evening";
-  showRoutes(defaultPeriod, "both");
-  setActiveButton(defaultPeriod, "both");
+  selectRoute("both");
+  selectPeriod(defaultPeriod);
 });
 
 async function showRoutes(period, routeType) {
@@ -239,21 +346,10 @@ async function showRoutes(period, routeType) {
   }
 
   updateLegend(routesToShow);
-  document.getElementById("mobileMenu").classList.remove("active");
-  setActiveButton(period, routeType);
 
-  const periodNames = {
-    morning: "Mañana",
-    midday: "Mediodía",
-    evening: "Tarde",
-  };
-  const routeNames =
-    routeType === "route1"
-      ? "Ruta 1"
-      : routeType === "route2"
-      ? "Ruta 2"
-      : "Ambas Rutas";
-  showMessage(`✅ Mostrando ${routeNames} - ${periodNames[period]}`);
+  const pNames = { morning: "Mañana", midday: "Mediodía", evening: "Tarde" };
+  const rNames = { route1: "Ruta 1", route2: "Ruta 2", route3: "Ruta 3", both: "Todas" };
+  showMessage(`✅ ${rNames[routeType] || routeType} — ${pNames[period] || period}`);
 }
 
 function makeEndpointIcon(emoji, color) {
@@ -405,17 +501,7 @@ function searchStreet() {
   );
 }
 
-function setActiveButton(period, routeType) {
-  document.querySelectorAll(".btn").forEach((b) => b.classList.remove("active-btn"));
-  const typeIndex = { route1: 0, route2: 1, route3: 2, both: 3 };
-  const sections = document.querySelectorAll(".menu-section");
-  const periodIndex = { morning: 0, midday: 1, evening: 2 };
-  const section = sections[periodIndex[period]];
-  if (section) {
-    const btns = section.querySelectorAll(".btn");
-    if (btns[typeIndex[routeType]]) btns[typeIndex[routeType]].classList.add("active-btn");
-  }
-}
+function setActiveButton() {} // legacy stub — ya no se usa
 
 function showMessage(text) {
   const el = document.getElementById("searchMessage");
