@@ -79,6 +79,15 @@ document.getElementById("menuToggle").addEventListener("click", () => {
   document.getElementById("mobileMenu").classList.toggle("active");
 });
 
+// Cerrar menú al hacer clic fuera
+document.addEventListener("click", (e) => {
+  const menu = document.getElementById("mobileMenu");
+  const toggle = document.getElementById("menuToggle");
+  if (menu.classList.contains("active") && !menu.contains(e.target) && e.target !== toggle) {
+    menu.classList.remove("active");
+  }
+});
+
 document.getElementById("searchStreet").addEventListener("keypress", (e) => {
   if (e.key === "Enter") searchStreet();
 });
@@ -108,7 +117,13 @@ async function loadAllRoutes() {
   }
 }
 
-loadAllRoutes();
+loadAllRoutes().then(() => {
+  // Mostrar ambas rutas del turno actual por defecto
+  const hour = new Date().getHours();
+  const defaultPeriod = hour < 11 ? "morning" : hour < 15 ? "midday" : "evening";
+  showRoutes(defaultPeriod, "both");
+  setActiveButton(defaultPeriod, "both");
+});
 
 async function showRoutes(period, routeType) {
   clearMap();
@@ -183,6 +198,7 @@ async function showRoutes(period, routeType) {
 
   updateLegend(routesToShow);
   document.getElementById("mobileMenu").classList.remove("active");
+  setActiveButton(period, routeType);
 
   const periodNames = {
     morning: "Mañana",
@@ -346,6 +362,18 @@ function searchStreet() {
   showMessage(
     `✅ "${searchTerm}" encontrada en ${foundRoutes.length} ruta(s): ${routeNames}`
   );
+}
+
+function setActiveButton(period, routeType) {
+  document.querySelectorAll(".btn").forEach((b) => b.classList.remove("active-btn"));
+  const map = { route1: 0, route2: 1, both: 2 };
+  const sections = document.querySelectorAll(".menu-section");
+  const periodIndex = { morning: 0, midday: 1, evening: 2 };
+  const section = sections[periodIndex[period]];
+  if (section) {
+    const btns = section.querySelectorAll(".btn");
+    if (btns[map[routeType]]) btns[map[routeType]].classList.add("active-btn");
+  }
 }
 
 function showMessage(text) {
