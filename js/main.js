@@ -80,7 +80,7 @@ const isMobile = () => window.innerWidth <= 640;
 
 function initMobileUI() {
   if (isMobile()) {
-    document.getElementById("mobileBottomBar").style.display = "flex";
+    document.getElementById("mobileBottomBar").classList.add("active");
     document.getElementById("mobileSearchBtn").style.display = "flex";
   }
 }
@@ -88,12 +88,12 @@ window.addEventListener("resize", () => {
   const bar = document.getElementById("mobileBottomBar");
   const btn = document.getElementById("mobileSearchBtn");
   if (isMobile()) {
-    bar.style.display = "flex";
+    bar.classList.add("active");
     btn.style.display = "flex";
   } else {
-    bar.style.display = "none";
+    bar.classList.remove("active");
     btn.style.display = "none";
-    document.getElementById("searchBox").classList.remove("mobile-open");
+    document.getElementById("searchBox")?.classList.remove("mobile-open");
   }
 });
 initMobileUI();
@@ -152,35 +152,23 @@ document.addEventListener("click", (e) => {
   }
 });
 
-// ── Selección de ruta (nivel 1) ──
 function selectRoute(routeType) {
   selectedRoute = routeType;
-
-  // Sincronizar panel desktop
   document.querySelectorAll(".route-pill").forEach(b =>
     b.classList.toggle("selected", b.dataset.route === routeType)
   );
-  document.getElementById("periodSection").classList.add("visible");
-
-  // Sincronizar barra móvil
+  document.getElementById("periodSection")?.classList.add("visible");
   syncMobileRoute(routeType);
-
   if (selectedPeriod) triggerShowRoutes();
   else updateSummary();
 }
 
-// ── Selección de turno (nivel 2) ──
 function selectPeriod(period) {
   selectedPeriod = period;
-
-  // Sincronizar panel desktop
   document.querySelectorAll(".period-pill").forEach(b =>
     b.classList.toggle("selected", b.dataset.period === period)
   );
-
-  // Sincronizar barra móvil
   syncMobilePeriod(period);
-
   if (selectedRoute) triggerShowRoutes();
 }
 
@@ -222,6 +210,7 @@ async function triggerShowRoutes() {
 
 function updateSummary() {
   const el = document.getElementById("selectionSummary");
+  if (!el) return;
   if (selectedRoute && selectedPeriod) {
     el.textContent = `${routeNames[selectedRoute]} — ${periodNames[selectedPeriod]}`;
     el.classList.add("has-selection");
@@ -238,6 +227,7 @@ function updateActiveChip() {
   const chip = document.getElementById("activeChip");
   const dot  = document.getElementById("activeChipDot");
   const text = document.getElementById("activeChipText");
+  if (!chip) return;
   if (selectedRoute && selectedPeriod) {
     dot.style.background = routeColors[selectedRoute];
     text.textContent = `${routeNames[selectedRoute]} · ${periodNames[selectedPeriod]}`;
@@ -305,13 +295,13 @@ function resetMap() {
   selectedPeriod = null;
   document.querySelectorAll(".route-pill, .period-pill, .mob-route-btn, .mob-period-btn")
     .forEach(b => b.classList.remove("selected"));
-  document.getElementById("periodSection").classList.remove("visible");
-  document.getElementById("mobilePeriodRow").classList.remove("visible");
-  document.getElementById("activeChip").classList.remove("visible");
-  document.getElementById("legendPanel").classList.remove("visible");
+  document.getElementById("periodSection")?.classList.remove("visible");
+  document.getElementById("mobilePeriodRow")?.classList.remove("visible");
+  document.getElementById("activeChip")?.classList.remove("visible");
+  document.getElementById("legendPanel")?.classList.remove("visible");
   updateSummary();
   clearMap();
-  searchInput.value = "";
+  if (searchInput) searchInput.value = "";
   closeAutocomplete();
   const hour = new Date().getHours();
   const defaultPeriod = hour < 11 ? "morning" : hour < 15 ? "midday" : "evening";
