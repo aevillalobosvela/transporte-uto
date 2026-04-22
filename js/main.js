@@ -142,16 +142,12 @@ function togglePanel() {
   setTimeout(() => map.invalidateSize(), 310);
 }
 
-// ── Móvil: toggle panel ──
-document.getElementById("menuToggle").addEventListener("click", () => {
-  document.getElementById("sidePanel").classList.toggle("mobile-open");
-});
-
+// ── Cerrar panel lateral al clic fuera (desktop) ──
 document.addEventListener("click", (e) => {
   const panel = document.getElementById("sidePanel");
-  const toggle = document.getElementById("menuToggle");
+  if (!panel) return;
   if (panel.classList.contains("mobile-open") &&
-      !panel.contains(e.target) && e.target !== toggle && !toggle.contains(e.target)) {
+      !panel.contains(e.target)) {
     panel.classList.remove("mobile-open");
   }
 });
