@@ -80,18 +80,14 @@ const isMobile = () => window.innerWidth <= 640;
 
 function initMobileUI() {
   if (isMobile()) {
-    document.getElementById("mobileBottomBar").classList.add("active");
     document.getElementById("mobileSearchBtn").style.display = "flex";
   }
 }
 window.addEventListener("resize", () => {
-  const bar = document.getElementById("mobileBottomBar");
   const btn = document.getElementById("mobileSearchBtn");
   if (isMobile()) {
-    bar.classList.add("active");
     btn.style.display = "flex";
   } else {
-    bar.classList.remove("active");
     btn.style.display = "none";
     document.getElementById("searchBox")?.classList.remove("mobile-open");
   }
@@ -118,6 +114,7 @@ function syncMobileRoute(routeType) {
     b.classList.toggle("selected", b.dataset.route === routeType)
   );
   document.getElementById("mobilePeriodRow").classList.add("visible");
+  document.getElementById("map").classList.add("periods-visible");
 }
 
 function syncMobilePeriod(period) {
@@ -295,6 +292,7 @@ function resetMap() {
     .forEach(b => b.classList.remove("selected"));
   document.getElementById("periodSection")?.classList.remove("visible");
   document.getElementById("mobilePeriodRow")?.classList.remove("visible");
+  document.getElementById("map")?.classList.remove("periods-visible");
   document.getElementById("activeChip")?.classList.remove("visible");
   document.getElementById("legendPanel")?.classList.remove("visible");
   updateSummary();
