@@ -424,7 +424,20 @@
         font-size: 14px;
         font-weight: 700;
         letter-spacing: 0.03em;
+        flex: 1;
       }
+      .legend-close-btn {
+        background: none;
+        border: none;
+        color: rgba(255,255,255,0.75);
+        font-size: 20px;
+        line-height: 1;
+        cursor: pointer;
+        padding: 0;
+        flex-shrink: 0;
+        transition: color 0.15s;
+      }
+      .legend-close-btn:hover { color: white; }
 
       .legend-body {
         overflow-y: auto;
@@ -479,7 +492,8 @@
         border-left: 4px solid var(--brand);
         max-width: calc(100% - 32px);
         color: var(--text);
-        white-space: nowrap;
+        overflow: hidden;
+      text-overflow: ellipsis;
       }
 
       /* ── RESET BUTTON ── */
@@ -886,6 +900,7 @@
           <circle cx="10" cy="10" r="8" stroke="white" stroke-width="2"/>
         </svg>
         <h3>Rutas Activas</h3>
+        <button class="legend-close-btn" onclick="document.getElementById('legendPanel').classList.remove('visible')" title="Cerrar">&times;</button>
       </div>
       <div class="legend-body" id="legendContent"></div>
     </div>
@@ -895,7 +910,7 @@
     </div>
 
     <!-- Modal de bienvenida -->
-    <div class="welcome-overlay" id="welcomeOverlay">
+    <div class="welcome-overlay" id="welcomeOverlay" onclick="closeWelcome(event)">
       <div class="welcome-modal">
         <div class="modal-logo">
           <img src="img/Detic_logo.webp" alt="Logo UTO" />
@@ -920,7 +935,7 @@
             <div><strong>Detalle de rutas</strong> — Al seleccionar una ruta verás horario, parada de salida y llegada en el panel lateral.</div>
           </div>
         </div>
-        <button class="btn-start" onclick="document.getElementById('welcomeOverlay').style.display='none'">
+        <button class="btn-start" onclick="closeWelcome()">
           Entrar al mapa →
         </button>
       </div>

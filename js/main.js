@@ -9,14 +9,11 @@ L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
   attribution: "© OpenStreetMap contributors",
 }).addTo(map);
 
-L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-  attribution: "© OpenStreetMap contributors",
-}).addTo(map);
-
 let currentRoutes = [];
 let polylines = [];
 let markers = [];
 let allLoadedRoutes = [];
+const routeCache = {};
 
 const faculties = [
   {
@@ -180,9 +177,7 @@ async function triggerShowRoutes() {
     let allRoutes = [];
     for (const p of periods) {
       try {
-        const res = await fetch(`data/routes/${p}.json`);
-        if (!res.ok) continue;
-        const data = await res.json();
+        const data = await fetchRouteData(p);
         const sources = selectedRoute === "both"
           ? [...(data.route1||[]), ...(data.route2||[]), ...(data.route3||[])]
           : (data[selectedRoute] || []);
@@ -337,18 +332,28 @@ async function loadAllRoutes() {
 loadAllRoutes().then(() => {
   const hour = new Date().getHours();
   const defaultPeriod = hour < 11 ? "morning" : hour < 15 ? "midday" : "evening";
+  selectedPeriod = defaultPeriod;
+  syncMobilePeriod(defaultPeriod);
+  document.querySelectorAll(".period-pill").forEach(b =>
+    b.classList.toggle("selected", b.dataset.period === defaultPeriod)
+  );
   selectRoute("both");
-  selectPeriod(defaultPeriod);
 });
+
+async function fetchRouteData(period) {
+  if (routeCache[period]) return routeCache[period];
+  const response = await fetch(`data/routes/${period}.json`);
+  if (!response.ok) throw new Error(`Archivo no encontrado: ${period}.json`);
+  routeCache[period] = await response.json();
+  return routeCache[period];
+}
 
 async function showRoutes(period, routeType) {
   clearMap();
 
   let routesData;
   try {
-    const response = await fetch(`data/routes/${period}.json`);
-    if (!response.ok) throw new Error(`Archivo no encontrado: ${period}.json`);
-    routesData = await response.json();
+    routesData = await fetchRouteData(period);
   } catch (err) {
     console.error("Error al cargar las rutas:", err);
     showMessage("❌ Error al cargar las rutas. Verifica los archivos JSON.");
@@ -541,13 +546,14 @@ function searchStreet() {
 
   updateLegend(foundRoutes);
 
-  const routeNames = foundRoutes.map((r) => r.name).join(", ");
-  showMessage(
-    `✅ "${searchTerm}" encontrada en ${foundRoutes.length} ruta(s): ${routeNames}`
-  );
+  const foundNames = foundRoutes.map((r) => r.name).join(", ");
+  showMessage(`✅ "${searchTerm}" encontrada en ${foundRoutes.length} ruta(s): ${foundNames}`);
 }
 
-function setActiveButton() {} // legacy stub — ya no se usa
+function closeWelcome(e) {
+  if (e && e.target !== e.currentTarget) return;
+  document.getElementById("welcomeOverlay").style.display = "none";
+}
 
 function showMessage(text) {
   const el = document.getElementById("searchMessage");
