@@ -286,6 +286,99 @@
         border-right: 8px solid transparent;
         border-bottom: 12px solid currentColor;
       }
+
+      /* Modal de bienvenida */
+      .welcome-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.55);
+        z-index: 2000;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 16px;
+      }
+
+      .welcome-modal {
+        background: white;
+        border-radius: 16px;
+        padding: 32px 28px 24px;
+        max-width: 480px;
+        width: 100%;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+        animation: modalIn 0.25s ease;
+      }
+
+      @keyframes modalIn {
+        from { opacity: 0; transform: translateY(-20px); }
+        to   { opacity: 1; transform: translateY(0); }
+      }
+
+      .welcome-modal .modal-logo {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 16px;
+      }
+
+      .welcome-modal .modal-logo img {
+        width: 52px;
+        height: auto;
+        border-radius: 6px;
+      }
+
+      .welcome-modal h2 {
+        margin: 0;
+        font-size: 20px;
+        color: #1e3a8a;
+      }
+
+      .welcome-modal p {
+        margin: 0 0 20px;
+        color: #475569;
+        font-size: 14px;
+        line-height: 1.6;
+      }
+
+      .welcome-modal .features {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        margin-bottom: 24px;
+      }
+
+      .welcome-modal .feature-item {
+        display: flex;
+        align-items: flex-start;
+        gap: 10px;
+        background: #f1f5f9;
+        border-radius: 8px;
+        padding: 10px 12px;
+        font-size: 14px;
+        color: #1e293b;
+      }
+
+      .welcome-modal .feature-item span.icon {
+        font-size: 18px;
+        flex-shrink: 0;
+      }
+
+      .welcome-modal .btn-start {
+        width: 100%;
+        padding: 13px;
+        background: #1e3a8a;
+        color: white;
+        border: none;
+        border-radius: 10px;
+        font-size: 15px;
+        font-weight: 700;
+        cursor: pointer;
+        transition: opacity 0.2s;
+      }
+
+      .welcome-modal .btn-start:hover {
+        opacity: 0.9;
+      }
     </style>
   </head>
   <body>
@@ -365,6 +458,38 @@
 
     <div class="logo-overlay">
       <img src="img/Detic_logo.webp" alt="Logo UTO" />
+    </div>
+
+    <!-- Modal de bienvenida -->
+    <div class="welcome-overlay" id="welcomeOverlay">
+      <div class="welcome-modal">
+        <div class="modal-logo">
+          <img src="img/Detic_logo.webp" alt="Logo UTO" />
+          <h2>Sistema de Transporte UTO</h2>
+        </div>
+        <p>Bienvenido al mapa interactivo de rutas de transporte universitario. Aquí puedes consultar las rutas de buses disponibles según el turno del día.</p>
+        <div class="features">
+          <div class="feature-item">
+            <span class="icon">🗺️</span>
+            <div><strong>Ver rutas en el mapa</strong> — Selecciona el turno (Mañana, Mediodía o Tarde) y la ruta que deseas visualizar.</div>
+          </div>
+          <div class="feature-item">
+            <span class="icon">🔍</span>
+            <div><strong>Buscar por calle</strong> — Escribe el nombre de una calle para encontrar qué rutas pasan por ahí.</div>
+          </div>
+          <div class="feature-item">
+            <span class="icon">🎓</span>
+            <div><strong>Facultades marcadas</strong> — Las ubicaciones de las facultades están señaladas directamente en el mapa.</div>
+          </div>
+          <div class="feature-item">
+            <span class="icon">📋</span>
+            <div><strong>Detalle de rutas</strong> — Al seleccionar una ruta verás horario, parada de salida y llegada en el panel lateral.</div>
+          </div>
+        </div>
+        <button class="btn-start" onclick="document.getElementById('welcomeOverlay').style.display='none'">
+          Entrar al mapa →
+        </button>
+      </div>
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
