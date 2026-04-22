@@ -75,7 +75,56 @@ const faculties = [
   },
 ];
 
-// ── Estado del panel ──
+// ── Detección móvil ──
+const isMobile = () => window.innerWidth <= 640;
+
+function initMobileUI() {
+  if (isMobile()) {
+    document.getElementById("mobileBottomBar").style.display = "flex";
+    document.getElementById("mobileSearchBtn").style.display = "flex";
+  }
+}
+window.addEventListener("resize", () => {
+  const bar = document.getElementById("mobileBottomBar");
+  const btn = document.getElementById("mobileSearchBtn");
+  if (isMobile()) {
+    bar.style.display = "flex";
+    btn.style.display = "flex";
+  } else {
+    bar.style.display = "none";
+    btn.style.display = "none";
+    document.getElementById("searchBox").classList.remove("mobile-open");
+  }
+});
+initMobileUI();
+
+// ── Búsqueda móvil ──
+function toggleMobileSearch() {
+  const box = document.getElementById("searchBox");
+  box.classList.toggle("mobile-open");
+  if (box.classList.contains("mobile-open")) {
+    setTimeout(() => document.getElementById("searchStreet").focus(), 50);
+  }
+}
+
+// ── Leyenda móvil (drawer) ──
+function toggleMobileLegend() {
+  document.getElementById("legendPanel").classList.toggle("visible");
+}
+
+// ── Sincronizar selección en barra móvil ──
+function syncMobileRoute(routeType) {
+  document.querySelectorAll(".mob-route-btn").forEach(b =>
+    b.classList.toggle("selected", b.dataset.route === routeType)
+  );
+  document.getElementById("mobilePeriodRow").classList.add("visible");
+}
+
+function syncMobilePeriod(period) {
+  document.querySelectorAll(".mob-period-btn").forEach(b =>
+    b.classList.toggle("selected", b.dataset.period === period)
+  );
+}
 let selectedRoute = null;
 let selectedPeriod = null;
 
@@ -111,28 +160,30 @@ document.addEventListener("click", (e) => {
 function selectRoute(routeType) {
   selectedRoute = routeType;
 
+  // Sincronizar panel desktop
   document.querySelectorAll(".route-pill").forEach(b =>
     b.classList.toggle("selected", b.dataset.route === routeType)
   );
-
-  // Mostrar sección de turno
   document.getElementById("periodSection").classList.add("visible");
 
-  // Si ya había turno seleccionado, disparar directamente
-  if (selectedPeriod) {
-    triggerShowRoutes();
-  } else {
-    updateSummary();
-  }
+  // Sincronizar barra móvil
+  syncMobileRoute(routeType);
+
+  if (selectedPeriod) triggerShowRoutes();
+  else updateSummary();
 }
 
 // ── Selección de turno (nivel 2) ──
 function selectPeriod(period) {
   selectedPeriod = period;
 
+  // Sincronizar panel desktop
   document.querySelectorAll(".period-pill").forEach(b =>
     b.classList.toggle("selected", b.dataset.period === period)
   );
+
+  // Sincronizar barra móvil
+  syncMobilePeriod(period);
 
   if (selectedRoute) triggerShowRoutes();
 }
@@ -252,9 +303,12 @@ function closeAutocomplete() {
 function resetMap() {
   selectedRoute = null;
   selectedPeriod = null;
-  document.querySelectorAll(".route-pill, .period-pill").forEach(b => b.classList.remove("selected"));
+  document.querySelectorAll(".route-pill, .period-pill, .mob-route-btn, .mob-period-btn")
+    .forEach(b => b.classList.remove("selected"));
   document.getElementById("periodSection").classList.remove("visible");
+  document.getElementById("mobilePeriodRow").classList.remove("visible");
   document.getElementById("activeChip").classList.remove("visible");
+  document.getElementById("legendPanel").classList.remove("visible");
   updateSummary();
   clearMap();
   searchInput.value = "";
