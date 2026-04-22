@@ -247,7 +247,7 @@ function updateActiveChip() {
   }
 }
 
-document.getElementById("searchStreet").addEventListener("keypress", (e) => {
+document.getElementById("searchStreet")?.addEventListener("keypress", (e) => {
   if (e.key === "Enter") { closeAutocomplete(); searchStreet(); }
 });
 
@@ -256,7 +256,7 @@ const searchInput = document.getElementById("searchStreet");
 const autocompleteList = document.getElementById("autocompleteList");
 let highlightedIndex = -1;
 
-searchInput.addEventListener("input", () => {
+searchInput?.addEventListener("input", () => {
   const val = searchInput.value.trim().toLowerCase();
   highlightedIndex = -1;
   if (!val || allLoadedRoutes.length === 0) { closeAutocomplete(); return; }
@@ -277,7 +277,7 @@ searchInput.addEventListener("input", () => {
   autocompleteList.style.display = "block";
 });
 
-searchInput.addEventListener("keydown", (e) => {
+searchInput?.addEventListener("keydown", (e) => {
   const items = autocompleteList.querySelectorAll("div");
   if (e.key === "ArrowDown") {
     highlightedIndex = Math.min(highlightedIndex + 1, items.length - 1);
@@ -290,11 +290,13 @@ searchInput.addEventListener("keydown", (e) => {
   } else if (e.key === "Escape") { closeAutocomplete(); }
 });
 
-searchInput.addEventListener("blur", () => setTimeout(closeAutocomplete, 150));
+searchInput?.addEventListener("blur", () => setTimeout(closeAutocomplete, 150));
 
 function closeAutocomplete() {
-  autocompleteList.style.display = "none";
-  autocompleteList.innerHTML = "";
+  if (autocompleteList) {
+    autocompleteList.style.display = "none";
+    autocompleteList.innerHTML = "";
+  }
   highlightedIndex = -1;
 }
 
